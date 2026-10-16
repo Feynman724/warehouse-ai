@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "scripts": { "test": "node tests/decision-webview.cjs" },
+  "devDependencies": { "jsdom": "^26.1.0" }
+}

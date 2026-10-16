@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174c3a">
+  <title>物资仓库｜AI 借还工作台 v2</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <button class="brand" data-action="navigate" data-view="inventory" aria-label="返回库存总览">
+        <span class="brand-mark">WH</span>
+        <span class="brand-copy"><strong>物资仓库</strong><small>AI 借还工作台</small></span>
+      </button>
+
+      <nav id="desktop-nav" class="main-nav"></nav>
+
+      <div class="sidebar-foot">
+        <span class="status-dot"></span>
+        <span><small>本地演示版</small><strong>数据自动保存</strong></span>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="breadcrumb" id="breadcrumb">仓库 A · 库存总览</p>
+          <p class="demo-label">演示数据</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="contact-button" data-action="show-contact">管理员电话</button>
+          <div class="role-switch" role="group" aria-label="演示身份">
+            <button data-action="set-role" data-role="user">普通用户</button>
+            <button data-action="set-role" data-role="admin">管理员</button>
+          </div>
+          <button class="profile-button" data-action="open-reset" aria-label="打开演示设置">
+            <span class="avatar" id="avatar">管</span>
+            <span class="profile-copy"><strong id="profile-name">物资管理员</strong><small>演示账号</small></span>
+          </button>
+        </div>
+      </header>
+
+      <div id="view-root" class="view-root" aria-live="polite"></div>
+    </main>
+
+    <nav id="mobile-nav" class="mobile-nav" aria-label="移动端导航"></nav>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="assertive"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

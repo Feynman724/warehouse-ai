@@ -1,0 +1,17 @@
+node_modules/
+data/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
+*.sqlite
+*.sqlite3
+*.db
+*.db-*
+*.pem
+*.key
+output/pdf/*.aux
+output/pdf/*.log
+output/pdf/*.out
+output/pdf/*.synctex.gz

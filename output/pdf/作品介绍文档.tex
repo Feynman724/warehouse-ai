@@ -1,0 +1,221 @@
+%!TEX program = xelatex
+\documentclass[UTF8,fontset=none,11pt,a4paper]{ctexart}
+\usepackage{fontspec}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setCJKmainfont{PingFang SC}
+\setCJKsansfont{PingFang SC}
+\usepackage[margin=17mm,top=16mm,bottom=16mm]{geometry}
+\usepackage{graphicx,xcolor,tabularx,array,multicol,tikz,fancyhdr,hyperref}
+\usepackage[most]{tcolorbox}
+\usetikzlibrary{arrows.meta,positioning}
+\hypersetup{colorlinks=true,urlcolor=[HTML]{1D684F},linkcolor=[HTML]{1D684F}}
+\definecolor{ink}{HTML}{1E2B25}
+\definecolor{forest}{HTML}{174C3A}
+\definecolor{mint}{HTML}{E9F2ED}
+\definecolor{slate}{HTML}{5E6C64}
+\definecolor{line}{HTML}{D9E2DC}
+\definecolor{gold}{HTML}{C79648}
+\definecolor{paper}{HTML}{F8F7F2}
+\pagecolor{paper}
+\color{ink}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\renewcommand{\arraystretch}{1.32}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{forest}\bfseries 物资仓库 AI 借还工作台}
+\fancyhead[R]{\footnotesize\color{slate}作品介绍 · 演示版本}
+\fancyfoot[L]{\footnotesize\color{slate}智创校园 · 浙晓未来}
+\fancyfoot[R]{\footnotesize\color{slate}\thepage\ / 4}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{14pt}
+\newtcolorbox{softbox}[1][]{enhanced,boxrule=0.5pt,colframe=line,colback=white,
+  arc=3mm,left=4mm,right=4mm,top=3mm,bottom=3mm,#1}
+\newtcolorbox{greenbox}[1][]{enhanced,boxrule=0pt,colback=mint,
+  arc=3mm,left=4mm,right=4mm,top=3mm,bottom=3mm,#1}
+\newcommand{\eyebrow}[1]{{\small\bfseries\color{forest}#1}}
+\newcommand{\pageheading}[2]{\eyebrow{#1}\par\vspace{2mm}{\fontsize{23}{29}\selectfont\bfseries #2}\par\vspace{3mm}{\color{gold}\rule{24mm}{1.4pt}}\par\vspace{5mm}}
+\newcommand{\capsule}[1]{\tikz[baseline=(X.base)]\node[draw=line,fill=white,rounded corners=2mm,
+  inner xsep=2.7mm,inner ysep=1.2mm] (X) {\footnotesize\bfseries #1};}
+\newcommand{\smalllabel}[1]{{\footnotesize\bfseries\color{forest}#1}}
+
+\begin{document}
+\thispagestyle{empty}
+
+% 1 — Cover
+\begin{minipage}[c]{0.58\linewidth}
+  \includegraphics[width=15mm]{assets/zju-seal.png}\hspace{3mm}
+  \begin{minipage}[c]{0.69\linewidth}
+    {\small\bfseries 浙江大学 · 校园场景 AI 应用}\par
+    {\footnotesize\color{slate}智创校园 · 浙晓未来｜作品介绍文档}
+  \end{minipage}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.37\linewidth}\raggedleft
+  {\footnotesize\color{forest}\bfseries WEB DEMONSTRATION}\par
+  {\footnotesize\color{slate}2026 年 10 月 16 日}
+\end{minipage}
+
+\vspace{18mm}
+\eyebrow{PHOTO · RECOGNIZE · VERIFY}\par\vspace{4mm}
+{\fontsize{32}{40}\selectfont\bfseries 物资仓库\par AI 借还工作台}\par\vspace{5mm}
+{\Large\color{forest}拍一张照，核对一单物资}\par\vspace{5mm}
+{\normalsize\color{slate}借出时把物资集中拍摄，由 AI 识别种类和数量，再与申请清单核对。\par
+我们希望用这一步代替逐件人工清点；照片同时留下交接时的现场记录。}
+
+\vspace{9mm}
+\smalllabel{核心关键词}\par\vspace{2mm}
+\capsule{同框拍照}\hspace{2mm}\capsule{物资识别}\hspace{2mm}\capsule{清单核对}\hspace{2mm}\capsule{库存更新}\hspace{2mm}\capsule{校园借还}
+
+\vspace{12mm}
+\begin{softbox}
+\begin{minipage}[c]{0.61\linewidth}
+  \smalllabel{核心问题}\par\vspace{2mm}
+  {\large\bfseries 谁来核对实际借走的物资？}\par\vspace{2mm}
+  {\small\color{slate}借出清单靠人填写，管理员还要对着实物逐件清点。物资多、摆放杂时，核对费时，也容易漏看。本作品尝试让 AI 先从同框照片中认出物资并核对数量；看不准的部分再交给管理员。}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.34\linewidth}
+  \includegraphics[width=\linewidth,height=50mm,keepaspectratio]{assets/scene.jpg}
+\end{minipage}
+\end{softbox}
+
+\vfill
+\begin{minipage}{0.69\linewidth}
+{\small\bfseries 作品形态}\quad 可运行的 Web 演示原型\par\vspace{1mm}
+{\small\bfseries 在线体验}\quad\href{https://blog.oppenheimer123.xyz/warehouse-ai/}{blog.oppenheimer123.xyz/warehouse-ai/}
+\end{minipage}\hfill
+\begin{minipage}{0.28\linewidth}\raggedleft
+{\footnotesize\color{slate}作品介绍文档\par V3.0 · 2026.10}
+\end{minipage}
+
+\newpage
+% 2 — Problem and overview
+\pageheading{01 / WHY IT MATTERS}{让照片承担借出核验}
+\begin{greenbox}
+\smalllabel{作品概要}\par\vspace{2mm}
+一次校园活动可能同时借走帐篷、桌椅、喇叭和支架。申请人先填清单，管理员再逐件核对，最后还要更新库存：同一批物资被反复清点和记录。我们设计的方式是把物资放在一个区域拍照，让 AI 识别种类和数量，并与申请清单比对。识别可信时，系统按清单更新库存；有差异或看不清时，管理员复核整单。照片随借还记录保存，归还时也可对照。
+\end{greenbox}
+
+\vspace{6mm}
+\smalllabel{人工核验卡在哪里}\par\vspace{3mm}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{27mm}X X@{}}
+\color{forest}现场 & \color{forest}\bfseries 传统方式 & \color{forest}\bfseries 工作台的改进\\\hline
+现场清点 & 多种物资混在一起，管理员要逐件辨认、计数。 & 用同框照片识别物资，生成可核对的种类和数量建议。\\
+清单比对 & 申请内容与实际拿走的物资可能不一致。 & 把识别结果与申请清单逐项比对，标出多拿、少拿或无法确认的物资。\\
+库存维护 & 核对后还要手动改库存，容易漏记。 & 核验通过后逐项入账，保留照片、操作人和库存变动记录。\\
+\end{tabularx}
+
+\vspace{8mm}
+\smalllabel{从照片到库存的四步}\par\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}[node distance=2.2mm,every node/.style={font=\small}]
+\tikzset{flowbox/.style={draw=line,fill=white,rounded corners=2mm,minimum height=13mm,text width=29mm,align=center}}
+\node[flowbox] (a) {\textbf{申请}\par 多物资清单};
+\node[flowbox,right=of a] (b) {\textbf{拍照}\par 同框现场};
+\node[flowbox,right=of b] (c) {\textbf{识别核验}\par AI 比对清单};
+\node[flowbox,right=of c] (d) {\textbf{入账}\par 逐项库存流水};
+\draw[-{Stealth[length=2mm]},forest,thick] (a)--(b);
+\draw[-{Stealth[length=2mm]},forest,thick] (b)--(c);
+\draw[-{Stealth[length=2mm]},forest,thick] (c)--(d);
+\end{tikzpicture}
+\end{center}
+
+\vspace{4mm}
+\begin{softbox}
+\smalllabel{核验规则}\par\vspace{2mm}
+\textbf{识别结果与申请清单一致，才考虑自动更新库存。} 模型没有覆盖某类物资、数量不确定或照片看不清时，整单交给管理员复核；照片只证明拍摄时的画面，不替代对缺损状况的判断。
+\end{softbox}
+
+\vspace{5mm}
+\smalllabel{真实物资样本}\par\vspace{2mm}
+\begin{minipage}[c]{0.31\linewidth}\centering
+\includegraphics[width=\linewidth,height=28mm,keepaspectratio]{assets/tent.jpg}\par{\footnotesize 帐篷}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.31\linewidth}\centering
+\includegraphics[width=\linewidth,height=28mm,keepaspectratio]{assets/table.jpg}\par{\footnotesize 折叠桌}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.31\linewidth}\centering
+\includegraphics[width=\linewidth,height=28mm,keepaspectratio]{assets/megaphone.jpg}\par{\footnotesize 喇叭}
+\end{minipage}
+
+\newpage
+% 3 — Product and evidence
+\pageheading{02 / HOW IT WORKS}{先识别，再核对，再入账}
+\begin{minipage}[t]{0.42\linewidth}
+\includegraphics[width=\linewidth,height=112mm,keepaspectratio]{assets/scene.jpg}\par\vspace{2mm}
+{\footnotesize\color{slate}实拍样例：喇叭与麦架放置在同一画面。}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.54\linewidth}
+\begin{softbox}
+\smalllabel{01｜申请与审批}\par\vspace{1.5mm}
+师生一次选择多类物资及数量；管理员批准或填写拒绝理由，改判记录可追溯。
+\end{softbox}\vspace{3mm}
+\begin{softbox}
+\smalllabel{02｜拍摄与清单比对}\par\vspace{1.5mm}
+把本次物资集中摆放、拍摄一张现场照。AI 给出物资种类、数量建议，系统逐项对照申请清单，并标出无法确认的项目。
+\end{softbox}\vspace{3mm}
+\begin{softbox}
+\smalllabel{03｜库存与归还}\par\vspace{1.5mm}
+识别与清单一致且满足核验条件时，系统可逐项扣减库存；否则由管理员确认。归还再次拍照，管理员核对完好与缺损数量后更新库存。
+\end{softbox}
+\end{minipage}
+
+\vspace{7mm}
+\begin{greenbox}
+\smalllabel{当前可现场展示的效果}\par\vspace{2mm}
+\textbf{已实现：}多物资申请、审批、同框拍照、识别建议、清单比对、管理员复核、库存更新和记录回看。当前通用模型尚不能可靠识别这批校园物资，实际借还仍以人工复核为主。\par\vspace{1.2mm}
+\textbf{交互演示：}使用“喇叭 + 麦架”实拍展示目标框、清单比对和\textbf{沙盒库存}变化。目标框是预先标注的，不能当作实时识别结果；演示数据不改变真实库存。
+\end{greenbox}
+
+\newpage
+% 4 — Context, outcomes and honest status
+\pageheading{03 / APPLICATION}{从学生组织物资室出发}
+\begin{minipage}[t]{0.48\linewidth}
+\smalllabel{落地应用场景}\par\vspace{3mm}
+\begin{softbox}
+\textbf{学生会与院系团委物资室}\par\vspace{1mm}
+帐篷、桌椅、指示牌、喇叭等跨类别物资的集中借还，是本原型最直接的应用场景。
+\end{softbox}\vspace{3mm}
+\begin{softbox}
+\textbf{校园活动交接}\par\vspace{1mm}
+活动前后的多批次领用和归还，可用照片、申请清单和库存流水形成统一的交接记录。
+\end{softbox}\vspace{3mm}
+\begin{softbox}
+\textbf{社团与公共器材室}\par\vspace{1mm}
+对高频借用、易损或成套器材，保留每次借还的现场影像和责任链。
+\end{softbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\smalllabel{预期应用成效}\par\vspace{3mm}
+\begin{greenbox}
+\textbf{减少逐件清点}\par\vspace{1mm}
+识别可靠时，管理员核对系统给出的物资清单，不必从头逐件辨认和计数。
+\end{greenbox}\vspace{3mm}
+\begin{greenbox}
+\textbf{减少清单与实物出入}\par\vspace{1mm}
+借出前提示识别结果与申请清单的差异，把问题留在交接现场处理。
+\end{greenbox}\vspace{3mm}
+\begin{greenbox}
+\textbf{库存有据可查}\par\vspace{1mm}
+核验后逐项入账，借还照片与变动记录一起保存；不确定时仍由管理员确认。
+\end{greenbox}
+\end{minipage}
+
+\vspace{7mm}
+\smalllabel{已验证的原型边界}\par\vspace{3mm}
+\begin{softbox}
+当前本地模型是通用物体检测器。在提供的\textbf{8 张混放场景照片}上，它尚未稳定检出可映射的仓库物资，因此不能凭这些照片自动扣库。归还影像的整体差异只能提示复核，\textbf{不能自动判定损坏}。下一步需要标注混放照片、补充独立测试集，检验识别类别、计数和误扣情况；达到要求前，实际借还仍由管理员复核。
+\end{softbox}
+
+\vspace{6mm}
+\begin{minipage}[c]{0.72\linewidth}
+\smalllabel{在线演示}\par\vspace{1mm}
+\href{https://blog.oppenheimer123.xyz/warehouse-ai/}{https://blog.oppenheimer123.xyz/warehouse-ai/}\par\vspace{2mm}
+{\footnotesize\color{slate}演示版已部署；真实库存与沙盒演示数据分离。}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.25\linewidth}\raggedleft
+{\footnotesize\color{forest}\bfseries 让每一次借还\par 都有据可查。}
+\end{minipage}
+
+\end{document}
