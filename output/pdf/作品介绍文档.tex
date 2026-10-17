@@ -27,7 +27,7 @@
 \fancyhead[L]{\footnotesize\color{forest}\bfseries 物资仓库 AI 借还工作台}
 \fancyhead[R]{\footnotesize\color{slate}作品介绍 · 演示版本}
 \fancyfoot[L]{\footnotesize\color{slate}智创校园 · 浙晓未来}
-\fancyfoot[R]{\footnotesize\color{slate}\thepage\ / 4}
+\fancyfoot[R]{\footnotesize\color{slate}\thepage\ / 7}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0pt}
 \setlength{\headheight}{14pt}
@@ -86,7 +86,7 @@
 {\small\bfseries 在线体验}\quad\href{https://blog.oppenheimer123.xyz/warehouse-ai/}{blog.oppenheimer123.xyz/warehouse-ai/}
 \end{minipage}\hfill
 \begin{minipage}{0.28\linewidth}\raggedleft
-{\footnotesize\color{slate}作品介绍文档\par V3.1 · 2026.10}
+{\footnotesize\color{slate}作品介绍文档\par V4.0 · 2026.10}
 \end{minipage}
 
 \newpage
@@ -94,7 +94,7 @@
 \pageheading{01 / WHY IT MATTERS}{让照片承担借出核验}
 \begin{greenbox}
 \smalllabel{作品概要}\par\vspace{2mm}
-一次校园活动可能同时借走帐篷、桌椅、喇叭和支架。申请人先填清单，管理员再逐件核对，最后还要更新库存：同一批物资被反复清点和记录。我们设计的方式是把物资放在一个区域拍照，让 AI 识别种类和数量，并与申请清单比对。识别可信时，系统按清单更新库存；有差异或看不清时，管理员复核整单。照片随借还记录保存，归还时也可对照。
+一次校园活动可能同时借走帐篷、桌椅、喇叭和支架。申请人先填清单，管理员再逐件核对，最后还要更新库存：同一批物资被反复清点和记录。我们设计的方式是把物资放在一个区域拍照，让 AI 识别种类和数量，并与申请清单比对。系统把候选结果交给管理员确认后逐项入账；有差异或看不清时，重点核对异常项目。照片随借还记录保存，归还时也可对照。
 \end{greenbox}
 
 \vspace{6mm}
@@ -124,19 +124,19 @@
 \vspace{4mm}
 \begin{softbox}
 \smalllabel{核验规则}\par\vspace{2mm}
-\textbf{识别结果与申请清单一致，才考虑自动更新库存。} 模型没有覆盖某类物资、数量不确定或照片看不清时，整单交给管理员复核；照片只证明拍摄时的画面，不替代对缺损状况的判断。
+\textbf{当前演示版的模型结果不直接改变库存。} 管理员对照照片和申请清单确认实际件数后，系统一次写入整单库存流水。模型没有覆盖某类物资、数量不确定或照片看不清时，界面保留待核对状态；照片也不替代对缺损状况的判断。
 \end{softbox}
 
-\vspace{5mm}
-\smalllabel{真实物资样本}\par\vspace{2mm}
+\vspace{3mm}
+\smalllabel{仓库真实物资}\par\vspace{1mm}
 \begin{minipage}[c]{0.31\linewidth}\centering
-\includegraphics[width=\linewidth,height=28mm,keepaspectratio]{assets/tent.jpg}\par{\footnotesize 帐篷}
+\includegraphics[width=\linewidth,height=20mm,keepaspectratio]{assets/tent.jpg}\par{\footnotesize 帐篷}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.31\linewidth}\centering
-\includegraphics[width=\linewidth,height=28mm,keepaspectratio]{assets/table.jpg}\par{\footnotesize 折叠桌}
+\includegraphics[width=\linewidth,height=20mm,keepaspectratio]{assets/table.jpg}\par{\footnotesize 折叠桌}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.31\linewidth}\centering
-\includegraphics[width=\linewidth,height=28mm,keepaspectratio]{assets/megaphone.jpg}\par{\footnotesize 喇叭}
+\includegraphics[width=\linewidth,height=20mm,keepaspectratio]{assets/megaphone.jpg}\par{\footnotesize 喇叭}
 \end{minipage}
 
 \newpage
@@ -157,7 +157,7 @@
 \end{softbox}\vspace{3mm}
 \begin{softbox}
 \smalllabel{03｜库存与归还}\par\vspace{1.5mm}
-识别与清单一致且满足核验条件时，系统可逐项扣减库存；否则由管理员确认。归还再次拍照，管理员核对完好与缺损数量后更新库存。
+管理员确认实际借出件数后，系统逐项扣减库存并记录流水。归还再次拍照，管理员核对完好与缺损数量后更新库存。
 \end{softbox}
 \end{minipage}
 
@@ -217,5 +217,106 @@
 \begin{minipage}[c]{0.25\linewidth}\raggedleft
 {\footnotesize\color{forest}\bfseries 让每一次借还\par 都有据可查。}
 \end{minipage}
+
+\newpage
+% 5 — Data and training
+\pageheading{04 / DATA \& TRAINING}{从仓库实拍到专用检测器}
+\begin{greenbox}
+\smalllabel{为什么要训练自己的模型}\par\vspace{2mm}
+通用检测器认识“椅子”，未必认识仓库里的“麦架”“指示牌”，更难在一张拥挤的交接照里数清各类物资。我们将真实仓库照片整理成\textbf{10 类目标检测数据}，以预训练 YOLO11n 为起点微调，使模型学习本仓库物资的外形、尺度和混放背景。
+\end{greenbox}
+
+\vspace{5mm}
+\smalllabel{数据如何进入训练}\par\vspace{2mm}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{28mm}X@{}}
+\color{forest}原始素材 & 23 张单品照、8 张混放照，均为提供的仓库实拍；最终模型使用全部 31 张。\\
+\color{forest}清洗与标注 & 去除照片 EXIF、缩小图像；按“喇叭、帐篷、手电筒、扫帚、折叠桌、指示牌、椅子、水桶、画架、麦架”统一类别，为物体画边界框，保存为 YOLO 格式。混放照共标注 29 个目标；遮挡或小物体的框有近似误差。\\
+\color{forest}训练输入 & 将类别、框坐标与图像绑定；模型以 640×640 输入学习位置与类别，利用 Mosaic 拼接、左右翻转和尺度扰动增加摆放变化。\\
+\end{tabularx}
+
+\vspace{5mm}
+\smalllabel{三段式训练：从辨认单品到处理同框照片}\par\vspace{2mm}
+\begin{softbox}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{24mm}p{36mm}X@{}}
+\color{forest}阶段 & \color{forest}\bfseries 数据与设置 & \color{forest}\bfseries 解决的问题\\\hline
+1. 单品起步 & 23 张单品照；70 轮，Mosaic 0.7。 & 先让模型学会 10 类物资的基本轮廓。\\
+2. 混放适配 & 单品照＋首批 4 张混放照；21 轮后提前停止。 & 学习遮挡、远近和同框背景；从上一阶段权重继续训练。\\
+3. 演示定型 & 全部 31 张；80 轮，Mosaic 0.25。 & 纳入后续 4 张混放照，降低过强的拼接增强，让最终模型贴近真实拍摄构图。\\
+\end{tabularx}
+\end{softbox}
+
+\vspace{4mm}
+\begin{minipage}[t]{0.48\linewidth}
+\smalllabel{训练配置}\par\vspace{1mm}
+{\small 图像边长 640、批量 8；在 Apple M4 的 MPS 上训练。最终权重导出为 ONNX（opset 17），服务器用 ONNX Runtime 在 CPU 上推理。}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\smalllabel{关键取舍}\par\vspace{1mm}
+{\small 物资类别固定，所以采用有监督专用模型；同时保留开放词表分支补充识别。训练照片数量少，专用模型的好结果不能当成跨场景泛化证明。}
+\end{minipage}
+
+\newpage
+% 6 — Inference details
+\pageheading{05 / INFERENCE ENGINE}{三路视觉结果，合成一张清单}
+\begin{softbox}
+\smalllabel{一帧照片的推理链路}\par\vspace{2mm}
+{\small 1. 浏览器采集 JPEG $\rightarrow$ 2. 服务端纠正方向、检查画质 $\rightarrow$ 3. 等比缩放到 640×640 $\rightarrow$ 4. 三路目标检测 $\rightarrow$ 5. 去重、计数并比对清单。}
+\end{softbox}
+
+\vspace{5mm}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{35mm}X@{}}
+\color{forest}识别分支 & \color{forest}\bfseries 职责\\\hline
+YOLOE-26s · 文字提示 & 输入“folding table”“camping tent”等 12 个英文提示词，再映射到 10 个仓库类别，为形态较通用的物资提供开放词表候选。\\
+YOLOE-26s · 视觉提示 & 用实拍红色喇叭作为参考，让模型在新画面中寻找同类目标；针对仅靠文字提示容易漏掉的具体外观补一条通路。\\
+YOLO11n · 仓库专用 & 使用本仓库带框照片微调，优先处理麦架、指示牌等场景相关的类别；权重以约 10 MB 的 ONNX 文件部署。\\
+\end{tabularx}
+
+\vspace{5mm}
+\smalllabel{后处理并非简单相加}\par\vspace{2mm}
+\begin{greenbox}
+三路输出先按各自置信度门槛筛选；对易误认的椅子、扫帚及专用模型的不同类别设置更严格阈值。每路以 IoU $>0.50$ 抑制重叠框，合并时对\textbf{同类别且 IoU $>0.35$} 的候选再去重。边界框还原到原图坐标后，同类剩余框的个数才作为“建议数量”。这些阈值是针对现有演示照片调出的工程参数，尚未在独立测试集上校准。
+\end{greenbox}
+
+\vspace{5mm}
+\smalllabel{真实模型输出示例}\par\vspace{2mm}
+\begin{minipage}[t]{0.48\linewidth}\centering
+\includegraphics[width=\linewidth,height=67mm,keepaspectratio]{assets/recognition-demo.jpg}\par\vspace{1mm}
+{\footnotesize\color{slate}喇叭＋麦架的现场照片}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\linewidth}\centering
+\includegraphics[width=\linewidth,height=67mm,keepaspectratio]{assets/recognition-mixed.jpg}\par\vspace{1mm}
+{\footnotesize\color{slate}混放训练照片中的候选框}
+\end{minipage}
+
+\vspace{2mm}
+{\footnotesize\color{slate}图中框与分数由当前模型实际推理结果绘制；第二张照片已参与训练，不能作为独立测试证据。}
+
+\newpage
+% 7 — System and evaluation
+\pageheading{06 / SYSTEM \& EVIDENCE}{让识别结果可用，也可追溯}
+\smalllabel{前后端如何协同}\par\vspace{2mm}
+\begin{softbox}
+{\small 手机网页通过摄像头读取当前画面，最长边压至 640 像素，以约 1.5 秒间隔逐帧提交；服务器缓存三个 ONNX 推理会话并串行处理实时请求。返回每个候选的类别、置信度与归一化位置，前端把框画回原图，显示按类别汇总的件数。单张照片上传与实时画面走同一识别流程。}
+\end{softbox}
+
+\vspace{5mm}
+\smalllabel{为什么有模型，还要保留管理员确认}\par\vspace{2mm}
+\begin{greenbox}
+真实借还不是只看“有没有框”。用户先提交一单多物资申请，审批后拍摄同框照片；系统保存原始证据、识别建议和申请清单，并指出数量差异。\textbf{管理员逐项确认实际借出件数，数据库事务才更新库存与流水。} 归还时再次留照，管理员分别填完好与缺损件数。当前三路模型启用时，自动入账资格被明确关闭；画面预览更不会改库存。这样即使漏检、误认，也不会让模型直接误扣库存。
+\end{greenbox}
+
+\vspace{5mm}
+\smalllabel{能复核的结果与不能越过的边界}\par\vspace{2mm}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{31mm}X@{}}
+\color{forest}训练照复查 & 8 张混放照片共 29 个手工标注目标；组合模型找到 28 个同类候选框，匹配条件为 IoU $\geq 0.30$，漏掉 1 个手电筒。\\
+\color{forest}评估性质 & 这 8 张都参与了最终训练，因此 28/29 是\textbf{训练照片回查}，不是独立测试准确率；它也没有统计误检、计数全对率或跨场景稳定性。\\
+\color{forest}下一步验收 & 在不同房间、光照、角度、遮挡和数量组合中补拍照片；按拍摄场景划分训练与未参与调参的测试集，报告逐类召回、误检、数量误差和库存误扣风险。\\
+\end{tabularx}
+
+\vspace{5mm}
+\begin{softbox}
+\smalllabel{演示部署与资料}\par\vspace{2mm}
+{\small 在线服务：\href{https://blog.oppenheimer123.xyz/warehouse-ai/}{blog.oppenheimer123.xyz/warehouse-ai/}。源代码包含标注、可重跑的训练照片检查脚本和推理流程；演示强调\textbf{真实模型、真实照片、真实库存事务}，同时清楚区分训练照效果与将来可用于无人值守扣库的验证结论。}
+\end{softbox}
 
 \end{document}
