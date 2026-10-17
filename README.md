@@ -39,6 +39,6 @@ sudo journalctl -u warehouse-ai -f
 
 部署位置 `/opt/warehouse-ai`，共享数据库 `/opt/warehouse-ai/shared/warehouse.db`。
 
-实时识别组合 [Ultralytics YOLOE-26s](https://docs.ultralytics.com/models/yoloe/) 与 [YOLO11n](https://docs.ultralytics.com/models/yolo11/)：`yoloe-warehouse.onnx` 包含 12 个英文物资提示词；`yoloe-megaphone.onnx` 使用红色喇叭实拍作视觉提示；`warehouse-specialist.onnx` 使用 23 张单品照及 4 张混放照微调，只采纳经过混放照片核对的帐篷、扫帚、指示牌候选。训练样本和边界见 [training/README.md](training/README.md)。仓库内保留旧的 [YOLOv5n ONNX](https://github.com/ultralytics/yolov5/releases/tag/v7.0) 作为无新模型时的回退。照片差异仅是复核线索，不能据此自动判定损坏。服务器使用 `/opt/warehouse-ai/vision-venv` 中的 ONNXRuntime 运行模型。
+实时识别组合 [Ultralytics YOLOE-26s](https://docs.ultralytics.com/models/yoloe/) 与 [YOLO11n](https://docs.ultralytics.com/models/yolo11/)：`yoloe-warehouse.onnx` 包含 12 个英文物资提示词；`yoloe-megaphone.onnx` 使用红色喇叭实拍作视觉提示；`warehouse-specialist.onnx` 使用 23 张单品照及全部 8 张混放照微调，作为 10 类物资的演示专用检测器。训练样本和边界见 [training/README.md](training/README.md)。仓库内保留旧的 [YOLOv5n ONNX](https://github.com/ultralytics/yolov5/releases/tag/v7.0) 作为无新模型时的回退。照片差异仅是复核线索，不能据此自动判定损坏。服务器使用 `/opt/warehouse-ai/vision-venv` 中的 ONNXRuntime 运行模型。
 
-2026-10-17 对 8 张混放照片逐物体标注：4 张用于训练，4 张同场景照片留出。留出照片共标注 15 个目标，组合模型给出 7 个对应真实物资的候选框，仍漏检 8 个；这不是独立场景准确率，更不足以支持自动扣库。需要补拍独立场景照片后才能评估泛化与误扣风险。
+2026-10-17 对 8 张混放照片逐物体标注并全部用于最终演示模型训练。组合模型在这批训练照片标出的 29 个目标里找出 28 个同类候选框（IoU≥0.3），漏掉 1 个手电筒。当前没有独立测试集，这不是新场景准确率，更不足以支持自动扣库；需要补拍独立场景照片评估泛化与误扣风险。

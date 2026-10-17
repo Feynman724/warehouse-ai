@@ -191,18 +191,20 @@ def detect_live(photo):
         collect(special, ('red megaphone reference',), ('喇叭',), .55)
     specialist = specialist_session()
     if specialist is not None:
-        # Small warehouse-photo model complements text prompting for classes
-        # that improved on mixed photos. Keep other classes out of the preview.
+        # This model was trained on all supplied photos for the demo. Higher
+        # class-specific floors limit duplicate and background suggestions.
         before = len(detections)
-        collect(specialist, SPECIALIST_NAMES, SPECIALIST_NAMES, .35)
+        collect(specialist, SPECIALIST_NAMES, SPECIALIST_NAMES, .50)
+        specialist_floors = {'喇叭': .65, '帐篷': .60, '手电筒': .50,
+                             '扫帚': .55, '折叠桌': .60, '指示牌': .60,
+                             '椅子': .60, '水桶': .60, '画架': .60, '麦架': .60}
         detections[before:] = [d for d in detections[before:]
-                               if d['label'] in ('帐篷', '扫帚', '指示牌')
-                               and d['confidence'] >= {'帐篷': .35, '扫帚': .35, '指示牌': .45}[d['label']]
-                               and (d['box'][2] - d['box'][0]) * (d['box'][3] - d['box'][1]) >= .035]
+                               if d['confidence'] >= specialist_floors[d['label']]
+                               and (d['box'][2] - d['box'][0]) * (d['box'][3] - d['box'][1]) >= .004]
     deduped = []
     for candidate in sorted(detections, key=lambda x: -x['confidence']):
         box = np.asarray(candidate['box'], dtype=np.float32)
-        if any(candidate['label'] == prior['label'] and _iou(box, np.asarray([prior['box']], dtype=np.float32))[0] > .5 for prior in deduped):
+        if any(candidate['label'] == prior['label'] and _iou(box, np.asarray([prior['box']], dtype=np.float32))[0] > .35 for prior in deduped):
             continue
         deduped.append(candidate)
     detections = deduped
