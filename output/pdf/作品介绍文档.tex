@@ -86,7 +86,7 @@
 {\small\bfseries 在线体验}\quad\href{https://blog.oppenheimer123.xyz/warehouse-ai/}{blog.oppenheimer123.xyz/warehouse-ai/}
 \end{minipage}\hfill
 \begin{minipage}{0.28\linewidth}\raggedleft
-{\footnotesize\color{slate}作品介绍文档\par V3.0 · 2026.10}
+{\footnotesize\color{slate}作品介绍文档\par V3.1 · 2026.10}
 \end{minipage}
 
 \newpage
@@ -164,8 +164,8 @@
 \vspace{7mm}
 \begin{greenbox}
 \smalllabel{当前可现场展示的效果}\par\vspace{2mm}
-\textbf{已实现：}多物资申请、审批、同框拍照、识别建议、清单比对、管理员复核、库存更新和记录回看。当前通用模型尚不能可靠识别这批校园物资，实际借还仍以人工复核为主。\par\vspace{1.2mm}
-\textbf{交互演示：}使用“喇叭 + 麦架”实拍展示目标框、清单比对和\textbf{沙盒库存}变化。目标框是预先标注的，不能当作实时识别结果；演示数据不改变真实库存。
+\textbf{已实现：}多物资申请、审批、同框拍照、模型识别、清单比对、管理员复核、库存更新和记录回看。网页可打开摄像头，连续发送当前画面，由服务器上的模型返回实时候选框。\par\vspace{1.2mm}
+\textbf{现场演示：}把“喇叭 + 麦架”放进画面，展示模型实时给出的两个候选框；也可上传实拍照片走同一推理流程。候选结果不直接修改库存，正式借还仍由管理员确认。
 \end{greenbox}
 
 \newpage
@@ -205,7 +205,7 @@
 \vspace{7mm}
 \smalllabel{已验证的原型边界}\par\vspace{3mm}
 \begin{softbox}
-当前本地模型是通用物体检测器。在提供的\textbf{8 张混放场景照片}上，它尚未稳定检出可映射的仓库物资，因此不能凭这些照片自动扣库。归还影像的整体差异只能提示复核，\textbf{不能自动判定损坏}。下一步需要标注混放照片、补充独立测试集，检验识别类别、计数和误扣情况；达到要求前，实际借还仍由管理员复核。
+当前使用开放词表模型和针对红色喇叭照片的视觉提示模型。对提供的\textbf{8 张混放照片}试跑，其中 6 张出现候选框，仍有漏检和误认；这不是识别准确率，也不足以支持自动扣库。归还影像的整体差异只能提示复核，\textbf{不能自动判定损坏}。下一步需要标注混放照片、补充独立测试集，检验类别、计数和误扣情况；达到要求前，实际借还仍由管理员复核。
 \end{softbox}
 
 \vspace{6mm}

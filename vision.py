@@ -2,6 +2,7 @@
 import base64
 import io
 import os
+import time
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
@@ -11,6 +12,13 @@ import onnxruntime as ort
 from PIL import Image, ImageOps, ImageStat, UnidentifiedImageError
 
 MODEL = Path(os.environ.get('WAREHOUSE_VISION_MODEL', '/opt/warehouse-ai/yolov5n.onnx'))
+LIVE_MODEL = Path(os.environ.get('WAREHOUSE_LIVE_MODEL', Path(__file__).resolve().parent / 'yoloe-warehouse.onnx'))
+MEGAPHONE_MODEL = Path(os.environ.get('WAREHOUSE_MEGAPHONE_MODEL', Path(__file__).resolve().parent / 'yoloe-megaphone.onnx'))
+LIVE_LABELS = ('megaphone', 'loudspeaker', 'microphone stand', 'tripod stand',
+               'folding table', 'camping tent', 'broom', 'bucket', 'plastic stool',
+               'flashlight', 'wooden easel', 'sign board')
+LIVE_NAMES = ('喇叭', '喇叭', '麦架', '麦架', '折叠桌', '帐篷', '扫帚',
+              '水桶', '椅子', '手电筒', '画架', '指示牌')
 MIMES = {'image/jpeg': 'JPEG', 'image/png': 'PNG', 'image/webp': 'WEBP'}
 MAX_BYTES = 4 * 1024 * 1024
 CLASSES = {
@@ -23,6 +31,10 @@ ALIASES = {
     'mouse': ('鼠标',), 'keyboard': ('键盘',), 'cell phone': ('手机',),
     'book': ('书',), 'bottle': ('瓶',), 'cup': ('杯',),
     'clock': ('钟',), 'vase': ('花瓶',),
+    '喇叭': ('喇叭',), '麦架': ('麦架',), '折叠桌': ('折叠桌',),
+    '帐篷': ('帐篷',), '扫帚': ('扫帚',), '水桶': ('水桶',),
+    '椅子': ('椅',), '手电筒': ('手电筒',), '画架': ('画架',),
+    '指示牌': ('指示牌',),
 }
 
 
@@ -70,6 +82,26 @@ def session():
     return ort.InferenceSession(str(MODEL), sess_options=options, providers=['CPUExecutionProvider'])
 
 
+@lru_cache(maxsize=1)
+def live_session():
+    if not LIVE_MODEL.exists():
+        return None
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 2
+    options.inter_op_num_threads = 1
+    return ort.InferenceSession(str(LIVE_MODEL), sess_options=options, providers=['CPUExecutionProvider'])
+
+
+@lru_cache(maxsize=1)
+def megaphone_session():
+    if not MEGAPHONE_MODEL.exists():
+        return None
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 2
+    options.inter_op_num_threads = 1
+    return ort.InferenceSession(str(MEGAPHONE_MODEL), sess_options=options, providers=['CPUExecutionProvider'])
+
+
 def image_quality(image):
     gray = image.convert('L')
     mean = ImageStat.Stat(gray).mean[0]
@@ -91,7 +123,79 @@ def _iou(box, boxes):
     return overlap / np.maximum(area1 + area2 - overlap, 1e-6)
 
 
+def detect_live(photo):
+    """Run the prompted warehouse detector on a fresh camera frame; never update stock."""
+    image, _, _ = decode_photo(photo)
+    quality = image_quality(image)
+    model = live_session()
+    if model is None:
+        return {'engine': 'unavailable', 'model': 'YOLOE-26s', 'detections': [],
+                'counts': [], 'quality': quality, 'latencyMs': None,
+                'note': '实时模型尚未安装，不能用预标注结果代替。'}
+    started = time.perf_counter()
+    width, height = image.size
+    scale = min(640 / width, 640 / height)
+    nw, nh = round(width * scale), round(height * scale)
+    left, top = (640 - nw) // 2, (640 - nh) // 2
+    canvas = Image.new('RGB', (640, 640), (114, 114, 114))
+    canvas.paste(image.resize((nw, nh), Image.Resampling.BILINEAR), (left, top))
+    tensor = np.asarray(canvas, dtype=np.float32).transpose(2, 0, 1)[None] / 255
+    detections = []
+    def collect(current_model, labels, names, threshold):
+        output = current_model.run(None, {current_model.get_inputs()[0].name: tensor})[0][0].T
+        scores = output[:, 4:4 + len(labels)]
+        class_ids = scores.argmax(axis=1)
+        confidence = scores[np.arange(len(scores)), class_ids]
+        keep = np.where(confidence >= threshold)[0]
+        keep = keep[np.argsort(-confidence[keep])[:150]]
+        raw_boxes = output[keep, :4]
+        boxes = np.column_stack((raw_boxes[:, 0] - raw_boxes[:, 2] / 2,
+                                 raw_boxes[:, 1] - raw_boxes[:, 3] / 2,
+                                 raw_boxes[:, 0] + raw_boxes[:, 2] / 2,
+                                 raw_boxes[:, 1] + raw_boxes[:, 3] / 2))
+        selected = []
+        for idx in range(len(keep)):
+            if any(_iou(boxes[idx], boxes[j:j+1])[0] > .50 for j in selected):
+                continue
+            selected.append(idx)
+            if len(selected) >= 30: break
+        for idx in selected:
+            cls = int(class_ids[keep[idx]])
+            box = boxes[idx]
+            normalized = [max(0., min(1., ((box[j] - (left if j % 2 == 0 else top)) / scale)
+                                         / (width if j % 2 == 0 else height))) for j in range(4)]
+            if normalized[2] <= normalized[0] or normalized[3] <= normalized[1]:
+                continue
+            detections.append({'label': names[cls], 'prompt': labels[cls],
+                               'confidence': round(float(confidence[keep[idx]]), 3),
+                               'box': [round(float(x), 4) for x in normalized]})
+    collect(model, LIVE_LABELS, LIVE_NAMES, .38)
+    special = megaphone_session()
+    if special is not None:
+        collect(special, ('red megaphone reference',), ('喇叭',), .55)
+    deduped = []
+    for candidate in sorted(detections, key=lambda x: -x['confidence']):
+        box = np.asarray(candidate['box'], dtype=np.float32)
+        if any(candidate['label'] == prior['label'] and _iou(box, np.asarray([prior['box']], dtype=np.float32))[0] > .5 for prior in deduped):
+            continue
+        deduped.append(candidate)
+    detections = deduped
+    counts = Counter(x['label'] for x in detections)
+    return {'engine': 'ready', 'model': 'YOLOE-26s / 实时推理',
+            'detections': detections,
+            'counts': [{'name': name, 'quantity': quantity} for name, quantity in counts.items()],
+            'quality': quality, 'latencyMs': round((time.perf_counter() - started) * 1000),
+            'note': '这是当前画面的真实模型候选结果；漏检和误认仍可能发生，库存不会因实时预览改变。'}
+
+
 def detect(image):
+    if live_session() is not None:
+        frame = image.copy()
+        frame.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
+        output = io.BytesIO()
+        frame.save(output, format='JPEG', quality=82)
+        report = detect_live('data:image/jpeg;base64,' + base64.b64encode(output.getvalue()).decode('ascii'))
+        return report['detections'], report['engine']
     model = session()
     if model is None:
         return [], 'unavailable'
@@ -156,10 +260,11 @@ def analyze(photo, inventory, expected_item_id, expected_quantity, before_photo=
     if before_photo:
         try: comparison = compare_images(decode_photo(before_photo)[0], image)
         except ValueError: pass
-    return {'engine': engine, 'model': 'YOLOv5n / COCO 80', 'quality': quality, 'detections': detections,
+    live_active = live_session() is not None
+    return {'engine': engine, 'model': 'YOLOE-26s / 实时推理' if live_active else 'YOLOv5n / COCO 80', 'quality': quality, 'detections': detections,
             'matchedItems': matched, 'status': status, 'expected': {'itemId': expected_item_id, 'quantity': expected_quantity},
-            'comparison': comparison,
-            'note': '仅对模型支持的常见类别给出辅助识别；未识别物资、数量差异和影像变化均由管理员复核。'}
+            'comparison': comparison, 'autoEligible': not live_active and status == 'matched',
+            'note': '当前识别仅作候选建议；真实借还仍由管理员核对，不会因实时识别预览自动扣库存。' if live_active else '仅对模型支持的常见类别给出辅助识别；未识别物资、数量差异和影像变化均由管理员复核。'}
 
 
 def analyze_batch(photo, inventory, expected, before_photo=None):
@@ -197,10 +302,11 @@ def analyze_batch(photo, inventory, expected, before_photo=None):
     if before_photo:
         try: comparison = compare_images(decode_photo(before_photo)[0], image)
         except ValueError: pass
-    return {'engine': engine, 'model': 'YOLOv5n / COCO 80', 'quality': quality,
+    live_active = live_session() is not None
+    return {'engine': engine, 'model': 'YOLOE-26s / 实时推理' if live_active else 'YOLOv5n / COCO 80', 'quality': quality,
             'detections': detections, 'matchedItems': matched, 'expectedItems': expected,
             'differences': differences, 'ambiguousLabels': ambiguous, 'unexpectedItems': unexpected,
             'status': status, 'comparison': comparison,
-            'autoEligible': status == 'matched' and bool(expected) and
+            'autoEligible': not live_active and status == 'matched' and bool(expected) and
                             all(detected[item['itemId']]['confidence'] >= .75 for item in expected),
-            'note': '同框照片用于留痕和辅助识别。现有模型只支持少数通用类别；帐篷、喇叭、扫帚等未覆盖物资必须人工核对，不能自动扣库存。'}
+            'note': '同框照片使用实际模型推理；当前识别尚未达到自动入账验收要求，所有借还仍由管理员核对，不能凭候选框扣库存。' if live_active else '同框照片用于留痕和辅助识别。现有模型只支持少数通用类别；帐篷、喇叭、扫帚等未覆盖物资必须人工核对，不能自动扣库存。'}

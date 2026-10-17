@@ -17,12 +17,21 @@ ADMIN_PHONE=os.environ.get('ADMIN_PHONE','待配置')
 SESSION_SECONDS=7*24*3600
 VISION_LOCK=threading.Lock()
 VISION_CALLS={}
+LIVE_LOCK=threading.Lock()
+LIVE_CALLS={}
 
 def check_vision_rate(uid):
     with VISION_LOCK:
       recent=[t for t in VISION_CALLS.get(uid,[]) if time.monotonic()-t<60]
       if len(recent)>=12: raise ValueError('试拍过于频繁，请稍后再试')
       recent.append(time.monotonic());VISION_CALLS[uid]=recent
+
+def check_live_rate(uid):
+    with VISION_LOCK:
+      recent=[t for t in LIVE_CALLS.get(uid,[]) if time.monotonic()-t<60]
+      if len(recent)>=45 or (recent and time.monotonic()-recent[-1]<1.0):
+        raise ValueError('实时识别请求过快，请稍后重试')
+      recent.append(time.monotonic());LIVE_CALLS[uid]=recent
 
 def now(): return datetime.now().isoformat(timespec='seconds')
 def conn():
@@ -112,6 +121,11 @@ def analyze_for_application(c,app,action,photo):
 def mutate(path,d,uid):
   user=one('SELECT * FROM users WHERE id=?',(uid,));
   if not user: raise ValueError('用户不存在')
+  if path=='/api/vision/live':
+    if not d.get('photo'): raise ValueError('请提供当前画面')
+    check_live_rate(uid)
+    with LIVE_LOCK:
+      return vision.detect_live(d['photo'])
   admin=user['role']=='admin'; t=now()
   with conn() as c:
     if path.startswith('/api/batch/'):
@@ -207,7 +221,7 @@ def mutate(path,d,uid):
       recognized=next((x for x in analysis['matchedItems'] if x['itemId']==app['item_id']),None)
       result=c.execute('INSERT INTO transactions(application_id,action,photo,ai_item_id,ai_quantity,damage,damage_type,damage_quantity,damage_description,created_at,vision_result) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(app['id'],action,photo,app['item_id'],recognized['quantity'] if recognized else app['quantity'],damage,d.get('damageType',''),int(d.get('damageQuantity',0)),d.get('damageDescription',''),t,json.dumps(analysis,ensure_ascii=False)))
       auto_posted=False
-      if action=='borrow' and not damage and analysis['status']=='matched' and recognized and recognized['confidence']>=.75:
+      if action=='borrow' and not damage and analysis.get('autoEligible') and recognized and recognized['confidence']>=.75:
         changed=c.execute('UPDATE inventory SET available=available-? WHERE id=? AND status="active" AND available>=?',(recognized['quantity'],app['item_id'],recognized['quantity']))
         if changed.rowcount==1:
           c.execute('UPDATE transactions SET final_item_id=?,final_quantity=?,status="confirmed",reviewed_at=?,reviewed_by="system" WHERE id=?',(app['item_id'],recognized['quantity'],t,result.lastrowid))
