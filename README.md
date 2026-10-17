@@ -12,7 +12,7 @@
 - 同框借还：一笔申请可包含多类物资，获批后把全部物资放在同一区域拍一张照片；照片、申请清单、AI 建议、复核数量与逐项库存变动关联留痕；
 - 当前开放词表模型的识别结果只作候选建议；管理员核对实物、照片和申请清单后逐项入账，归还也由管理员确认；
 - 整理用户提供的 23 张单品照片为 10 类物资参考样本，登录后可在同框借还页查看，辅助拍摄和人工复核；样本不等于训练完成的识别模型；
-- 摄像头画面连续送入本地 YOLOE-26s 模型，返回真实候选框与物资清单；红色喇叭额外使用用户提供照片生成的视觉提示模型。预览不修改库存；
+- 摄像头画面连续送入本地 YOLOE-26s 与用仓库实拍图微调的 YOLO11n，返回真实候选框与物资清单；红色喇叭额外使用实拍视觉提示。预览不修改库存；
 - 用户绑定联系电话、10 位学号、行政班级与部门；
 - 拒绝理由必填且申请人可见；
 - 管理员可在借还开始前修改审批决定，所有决定留痕；
@@ -20,7 +20,7 @@
 - 手动拉黑、解除、阻止申请、用户申诉与管理员处理；
 - 借出及归还复核；
 - 借还照片留痕、管理员影像档案与借出 / 归还画面对照；
-- YOLOE-26s 本地目标检测、物资数量候选、申请清单核验和画质提示；
+- YOLOE-26s 与仓库专用 YOLO11n 本地目标检测、物资数量候选、申请清单核验和画质提示；
 - 无需已有申请即可进行不改库存的视觉试拍，方便现场演示；
 - 借还照片入库前统一压缩并去除原始 EXIF 信息；
 - 模型不支持的物资、画质异常或清单差异进入人工复核，不直接改库存；
@@ -39,6 +39,6 @@ sudo journalctl -u warehouse-ai -f
 
 部署位置 `/opt/warehouse-ai`，共享数据库 `/opt/warehouse-ai/shared/warehouse.db`。
 
-实时识别使用 [Ultralytics YOLOE-26s](https://docs.ultralytics.com/models/yoloe/) 开放词表模型。`yoloe-warehouse.onnx` 包含 12 个英文物资提示词；`yoloe-megaphone.onnx` 使用用户提供的红色喇叭实拍作视觉提示。仓库内保留旧的 [YOLOv5n ONNX](https://github.com/ultralytics/yolov5/releases/tag/v7.0) 作为无新模型时的回退。照片差异仅是复核线索，不能据此自动判定损坏。服务器使用 `/opt/warehouse-ai/vision-venv` 中的 ONNXRuntime 运行模型。
+实时识别组合 [Ultralytics YOLOE-26s](https://docs.ultralytics.com/models/yoloe/) 与 [YOLO11n](https://docs.ultralytics.com/models/yolo11/)：`yoloe-warehouse.onnx` 包含 12 个英文物资提示词；`yoloe-megaphone.onnx` 使用红色喇叭实拍作视觉提示；`warehouse-specialist.onnx` 使用 23 张单品照及 4 张混放照微调，只采纳经过混放照片核对的帐篷、扫帚、指示牌候选。训练样本和边界见 [training/README.md](training/README.md)。仓库内保留旧的 [YOLOv5n ONNX](https://github.com/ultralytics/yolov5/releases/tag/v7.0) 作为无新模型时的回退。照片差异仅是复核线索，不能据此自动判定损坏。服务器使用 `/opt/warehouse-ai/vision-venv` 中的 ONNXRuntime 运行模型。
 
-2026-10-16 对用户提供的 8 张混放照片试跑新模型：其中 6 张出现物资候选框，但仍有漏检与误认。这不是识别准确率，也不足以支持自动扣库。后续需要混放照片的逐物体标注和独立验证集，才能训练或评估仓库专有类别模型。
+2026-10-17 对 8 张混放照片逐物体标注：4 张用于训练，4 张同场景照片留出。留出照片共标注 15 个目标，组合模型给出 7 个对应真实物资的候选框，仍漏检 8 个；这不是独立场景准确率，更不足以支持自动扣库。需要补拍独立场景照片后才能评估泛化与误扣风险。

@@ -14,11 +14,13 @@ from PIL import Image, ImageOps, ImageStat, UnidentifiedImageError
 MODEL = Path(os.environ.get('WAREHOUSE_VISION_MODEL', '/opt/warehouse-ai/yolov5n.onnx'))
 LIVE_MODEL = Path(os.environ.get('WAREHOUSE_LIVE_MODEL', Path(__file__).resolve().parent / 'yoloe-warehouse.onnx'))
 MEGAPHONE_MODEL = Path(os.environ.get('WAREHOUSE_MEGAPHONE_MODEL', Path(__file__).resolve().parent / 'yoloe-megaphone.onnx'))
+SPECIALIST_MODEL = Path(os.environ.get('WAREHOUSE_SPECIALIST_MODEL', Path(__file__).resolve().parent / 'warehouse-specialist.onnx'))
 LIVE_LABELS = ('megaphone', 'loudspeaker', 'microphone stand', 'tripod stand',
                'folding table', 'camping tent', 'broom', 'bucket', 'plastic stool',
                'flashlight', 'wooden easel', 'sign board')
 LIVE_NAMES = ('喇叭', '喇叭', '麦架', '麦架', '折叠桌', '帐篷', '扫帚',
               '水桶', '椅子', '手电筒', '画架', '指示牌')
+SPECIALIST_NAMES = ('喇叭', '帐篷', '手电筒', '扫帚', '折叠桌', '指示牌', '椅子', '水桶', '画架', '麦架')
 MIMES = {'image/jpeg': 'JPEG', 'image/png': 'PNG', 'image/webp': 'WEBP'}
 MAX_BYTES = 4 * 1024 * 1024
 CLASSES = {
@@ -102,6 +104,16 @@ def megaphone_session():
     return ort.InferenceSession(str(MEGAPHONE_MODEL), sess_options=options, providers=['CPUExecutionProvider'])
 
 
+@lru_cache(maxsize=1)
+def specialist_session():
+    if not SPECIALIST_MODEL.exists():
+        return None
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 2
+    options.inter_op_num_threads = 1
+    return ort.InferenceSession(str(SPECIALIST_MODEL), sess_options=options, providers=['CPUExecutionProvider'])
+
+
 def image_quality(image):
     gray = image.convert('L')
     mean = ImageStat.Stat(gray).mean[0]
@@ -170,9 +182,23 @@ def detect_live(photo):
                                'confidence': round(float(confidence[keep[idx]]), 3),
                                'box': [round(float(x), 4) for x in normalized]})
     collect(model, LIVE_LABELS, LIVE_NAMES, .38)
+    # The text model mislabeled a signboard as a chair and a flashlight as a
+    # broom in the supplied mixed photos. Require stronger evidence for both.
+    detections[:] = [d for d in detections if d['label'] not in ('椅子', '扫帚')
+                     or d['confidence'] >= .50]
     special = megaphone_session()
     if special is not None:
         collect(special, ('red megaphone reference',), ('喇叭',), .55)
+    specialist = specialist_session()
+    if specialist is not None:
+        # Small warehouse-photo model complements text prompting for classes
+        # that improved on mixed photos. Keep other classes out of the preview.
+        before = len(detections)
+        collect(specialist, SPECIALIST_NAMES, SPECIALIST_NAMES, .35)
+        detections[before:] = [d for d in detections[before:]
+                               if d['label'] in ('帐篷', '扫帚', '指示牌')
+                               and d['confidence'] >= {'帐篷': .35, '扫帚': .35, '指示牌': .45}[d['label']]
+                               and (d['box'][2] - d['box'][0]) * (d['box'][3] - d['box'][1]) >= .035]
     deduped = []
     for candidate in sorted(detections, key=lambda x: -x['confidence']):
         box = np.asarray(candidate['box'], dtype=np.float32)
@@ -181,7 +207,7 @@ def detect_live(photo):
         deduped.append(candidate)
     detections = deduped
     counts = Counter(x['label'] for x in detections)
-    return {'engine': 'ready', 'model': 'YOLOE-26s / 实时推理',
+    return {'engine': 'ready', 'model': 'YOLOE-26s + 仓库专用 YOLO11n',
             'detections': detections,
             'counts': [{'name': name, 'quantity': quantity} for name, quantity in counts.items()],
             'quality': quality, 'latencyMs': round((time.perf_counter() - started) * 1000),
@@ -261,7 +287,7 @@ def analyze(photo, inventory, expected_item_id, expected_quantity, before_photo=
         try: comparison = compare_images(decode_photo(before_photo)[0], image)
         except ValueError: pass
     live_active = live_session() is not None
-    return {'engine': engine, 'model': 'YOLOE-26s / 实时推理' if live_active else 'YOLOv5n / COCO 80', 'quality': quality, 'detections': detections,
+    return {'engine': engine, 'model': 'YOLOE-26s + 仓库专用 YOLO11n' if live_active else 'YOLOv5n / COCO 80', 'quality': quality, 'detections': detections,
             'matchedItems': matched, 'status': status, 'expected': {'itemId': expected_item_id, 'quantity': expected_quantity},
             'comparison': comparison, 'autoEligible': not live_active and status == 'matched',
             'note': '当前识别仅作候选建议；真实借还仍由管理员核对，不会因实时识别预览自动扣库存。' if live_active else '仅对模型支持的常见类别给出辅助识别；未识别物资、数量差异和影像变化均由管理员复核。'}
@@ -303,7 +329,7 @@ def analyze_batch(photo, inventory, expected, before_photo=None):
         try: comparison = compare_images(decode_photo(before_photo)[0], image)
         except ValueError: pass
     live_active = live_session() is not None
-    return {'engine': engine, 'model': 'YOLOE-26s / 实时推理' if live_active else 'YOLOv5n / COCO 80', 'quality': quality,
+    return {'engine': engine, 'model': 'YOLOE-26s + 仓库专用 YOLO11n' if live_active else 'YOLOv5n / COCO 80', 'quality': quality,
             'detections': detections, 'matchedItems': matched, 'expectedItems': expected,
             'differences': differences, 'ambiguousLabels': ambiguous, 'unexpectedItems': unexpected,
             'status': status, 'comparison': comparison,
