@@ -1,0 +1,156 @@
+[
+  {
+    "n": 1,
+    "tag": "开场",
+    "title": "一张照片，核对一单物资。",
+    "image": "scene.jpg",
+    "voice": "活动前，一批物资摆在面前：喇叭、支架、桌椅、帐篷。申请表写了什么，现场又实际拿走了什么？这道核验题，通常要靠管理员一件一件清点。",
+    "audio": "assets/voice/01.mp3",
+    "start": 0.0,
+    "voice_duration": 15.144,
+    "duration": 18.144
+  },
+  {
+    "n": 2,
+    "tag": "核心问题",
+    "title": "清单、实物、库存，如何对上？",
+    "image": "02-inventory.png",
+    "voice": "校园活动借还物资时，申请清单、现场实物和仓库库存经常分开记录。物资一多，清点就慢，漏看、错记也更难追查。我们把核验的起点，移到了交接现场的一张照片上。",
+    "audio": "assets/voice/02.mp3",
+    "start": 17.694,
+    "voice_duration": 18.336,
+    "duration": 21.336
+  },
+  {
+    "n": 3,
+    "tag": "产品方案",
+    "title": "同框拍照 → AI 识别 → 管理员确认",
+    "image": "03-batch-workbench.png",
+    "voice": "借用人将本次物资放进同一个区域，拍摄现场照片。模型给出类别、目标框和数量建议，系统再逐项对照申请清单。管理员只需重点核对差异，再确认实际借出的件数。",
+    "audio": "assets/voice/03.mp3",
+    "start": 38.58,
+    "voice_duration": 18.024,
+    "duration": 21.024
+  },
+  {
+    "n": 4,
+    "tag": "进入工作台",
+    "title": "双角色入口，共享同一库存",
+    "image": "01-login.png",
+    "voice": "这是可运行的网页工作台。师生提交申请与拍照，管理员审批、复核和管理库存；双方看到的是同一个服务端数据库。我们用一笔喇叭加麦架的借出，演示完整流程。",
+    "audio": "assets/voice/04.mp3",
+    "start": 59.154,
+    "voice_duration": 16.992,
+    "duration": 19.992
+  },
+  {
+    "n": 5,
+    "tag": "提交申请",
+    "title": "一单包含多类物资",
+    "image": "05-application.png",
+    "voice": "借用人先选择喇叭和麦架，各一件，填写借还日期与用途，提交同框申请。系统记录申请人和清单，不再要求为每一类物资单独走一遍借出流程。",
+    "audio": "assets/voice/05.mp3",
+    "start": 78.696,
+    "voice_duration": 14.952,
+    "duration": 17.952
+  },
+  {
+    "n": 6,
+    "tag": "管理员审批",
+    "title": "审批留痕，批准后进入拍照环节",
+    "image": "06-admin-approval.png",
+    "voice": "管理员在工作台查看整单申请，批准后借用人才进入拍照借出环节。审批决定和变更都会留下记录，现场照片也会与这笔申请绑定。",
+    "audio": "assets/voice/06.mp3",
+    "start": 96.198,
+    "voice_duration": 14.136,
+    "duration": 17.136
+  },
+  {
+    "n": 7,
+    "tag": "实时视觉",
+    "title": "这是模型对真实照片的推理结果",
+    "image": "04-live-detection.png",
+    "voice": "打开实时识别区，上传仓库实拍照片。画面中的红色喇叭和麦架被分别框出，右侧给出类别与数量。这些框来自服务器当前运行的模型，并非预先画好的演示图。",
+    "audio": "assets/voice/07.mp3",
+    "start": 112.884,
+    "voice_duration": 17.184,
+    "duration": 20.184
+  },
+  {
+    "n": 8,
+    "tag": "留痕与核对",
+    "title": "照片和 AI 建议一起归档",
+    "image": "09-pending-review.png",
+    "voice": "借用人提交同框照片后，系统保存原始现场影像、识别建议和申请清单。借出记录进入待复核状态。即使模型漏看了某件物资，照片仍保留了交接时可供查看的证据。",
+    "audio": "assets/voice/08.mp3",
+    "start": 132.618,
+    "voice_duration": 17.712,
+    "duration": 20.712
+  },
+  {
+    "n": 9,
+    "tag": "人工兜底",
+    "title": "管理员确认实际件数",
+    "image": "10-review-modal.png",
+    "voice": "管理员打开待复核照片，逐项核对实际借出的喇叭和麦架，并确认数量。当前版本的识别结果不会直接扣减库存；正式借还必须经过这一步，防止误认造成错误入账。",
+    "audio": "assets/voice/09.mp3",
+    "start": 152.88,
+    "voice_duration": 16.992,
+    "duration": 19.992
+  },
+  {
+    "n": 10,
+    "tag": "库存闭环",
+    "title": "一次确认，逐项写入库存流水",
+    "image": "12-stock-ledger.png",
+    "voice": "确认后，系统在同一笔数据库事务中更新两类物资的可借数量，并写下操作人、时间、前后数量和关联照片。归还时再次拍照，管理员分别确认完好与缺损件数。",
+    "audio": "assets/voice/10.mp3",
+    "start": 172.422,
+    "voice_duration": 17.232,
+    "duration": 20.232
+  },
+  {
+    "n": 11,
+    "tag": "识别技术",
+    "title": "开放词表＋实拍提示＋仓库专用模型",
+    "image": "recognition-demo.jpg",
+    "voice": "识别端并行使用三路模型：文字提示的开放词表检测器、红色喇叭实拍视觉提示，以及使用仓库照片微调的十类 YOLO11n。系统按置信度筛选候选框，去除重叠，再按类别计数。",
+    "audio": "assets/voice/11.mp3",
+    "start": 192.204,
+    "voice_duration": 18.192,
+    "duration": 21.192
+  },
+  {
+    "n": 12,
+    "tag": "训练过程",
+    "title": "23 张单品照，8 张混放照",
+    "image": "recognition-mixed.jpg",
+    "voice": "训练先用二十三张单品照学习外形，再逐步加入混放场景，最终使用全部三十一张仓库照片。每个目标都标注类别与边界框，训练包含拼接、翻转和尺度扰动，最终导出 ONNX 在服务器本地推理。",
+    "audio": "assets/voice/12.mp3",
+    "start": 212.946,
+    "voice_duration": 20.544,
+    "duration": 23.544
+  },
+  {
+    "n": 13,
+    "tag": "验证边界",
+    "title": "训练照回查：28 / 29",
+    "image": "recognition-mixed.jpg",
+    "voice": "在参与训练的八张混放照片中，人工标出二十九个目标，组合模型找到二十八个同类候选框，漏掉一个手电筒。这里展示的是训练照片回查，不是独立测试准确率。下一步要补拍新场景，验证漏检、误认和计数误差。",
+    "audio": "assets/voice/13.mp3",
+    "start": 236.04,
+    "voice_duration": 21.768,
+    "duration": 24.768
+  },
+  {
+    "n": 14,
+    "tag": "结束",
+    "title": "拍照识别，让借还核验有据可查",
+    "image": "scene.jpg",
+    "voice": "这套原型已经跑通申请、审批、拍照识别、管理员复核与库存留痕。我们的目标是让人工逐件清点逐步变为对 AI 建议的核验；在模型经过独立场景验证之前，库存仍由人确认。欢迎体验在线演示与查看开源代码。",
+    "audio": "assets/voice/14.mp3",
+    "start": 260.358,
+    "voice_duration": 22.464,
+    "duration": 25.464
+  }
+]

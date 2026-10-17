@@ -15,3 +15,12 @@ output/pdf/*.aux
 output/pdf/*.log
 output/pdf/*.out
 output/pdf/*.synctex.gz
+
+output/video/warehouse-film/.hyperframes/
+output/video/warehouse-demo/
+output/video/warehouse-film/renders/
+output/video/warehouse-film/AGENTS.md
+output/video/warehouse-film/CLAUDE.md
+
+output/video/warehouse-film/.thumbnails/
+output/video/warehouse-film/.waveform-cache/
